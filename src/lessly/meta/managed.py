@@ -1,37 +1,40 @@
-import inspect
+__all__ = ('innerclass', 'tracked')
+
+from weakref import WeakKeyDictionary
 from functools import wraps
-
-from lessly import curry
-from lessly.collect.weakset import WeakSet
+from lessly.fn import curry
 from lessly.meta.stack import find_calling_instance
+from lessly.actor.announcer import Announcer, AnnouncingMethod, AnnouncingClassMethod
+
 
 @curry
-def wrap_method(cls, method, name=None):
-    if name is None:
-        name = method.__name__
-    
-    if hasattr(cls, name):
-        wrapped = getattr(cls, name)
-        wrapper = wraps(wrapped)(method)
-        wrapper._wrapped = wrapped
-    else:
-        wrapper = method
-        wrapper._wrapped = lambda self, *args, **kw: None
-    
-    setattr(cls, name, wrapper)
-    return wrapper
-
-@curry
-def innerclass(OuterType, InnerType, prop=None):
-    "Attributes this class's instances to the calling OuterClass on instantiation."
-    InnerType._outer_type = OuterType
+def innerclass(OuterCls, InnerCls, prop=None):
+    """ Class decorator. Attributes this class's instances to the calling 
+        OuterClass on instantiation.
+    """
+    InnerCls._outer_type = OuterCls
     if prop is None:
-        prop = OuterType.__name__.lower()
+        prop = OuterCls.__name__.lower()
     
-    @wrap_method(InnerType, name='__init__')
+    wrapped = InnerCls.__init__ if hasattr(InnerCls, '__init__') else None
     def inner_init(self, *args, **kw):
         setattr(self, prop, find_calling_instance(self._outer_type))
-        inner_init._wrapped(self, *args, **kw)
+        if wrapped:
+            wrapped(self, *args, **kw)
     
-    return InnerType
+    InnerCls.__init__ = wraps(wrapped)(inner_init) if wrapped else inner_init
+    return InnerCls
 
+@curry
+def tracked(cls, prop='instances'):
+    if Announcer not in cls.__bases__:
+        cls.__new__ = AnnouncingClassMethod(cls.__new__)
+    
+    instances = WeakKeyDictionary()
+    setattr(cls, prop, instances)
+    
+    def add_instance(name, cls, instance, *args, **kw):
+        instances[cls] = {}
+    
+    cls.__new__.listen()
+    return cls

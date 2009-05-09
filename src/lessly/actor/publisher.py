@@ -1,6 +1,6 @@
+__all__ = ('Multicaster', 'Publisher')
 import collections, itertools
 
-__all__ = ('Multicaster', 'Publisher')
 
 class Multicaster(list):
     "A simple multicaster."
