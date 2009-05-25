@@ -64,4 +64,3 @@ def find_calling_instance(Type):
             frame = frame.f_back
     finally:
         del frame
-

@@ -1,5 +1,15 @@
-__all__ = ('Multicaster', 'Publisher')
-import collections, itertools
+__all__ = ('Multicaster', 'Publisher', 'noevent')
+import itertools
+from collections import defaultdict
+from functools import wraps
+from lessly.fn import curry
+
+@curry
+def noevent(fn, event, *args, **kw):
+    @wraps(fn)
+    def noevent_fn(*args, **kw):
+        return fn(*args, **kw)
+    return noevent_fn
 
 
 class Multicaster(list):
@@ -18,16 +28,21 @@ class Multicaster(list):
     
     def fire(self, *data, **kwdata):
         for listener in self[:]:
-            listener(data, kwdata)
+            listener(*data, **kwdata)
     
     def __str__(self):
         return "<%s len=%s>" % (self.__class__.__name__, len(self))
+    
+    def __repr__(self):
+        return str(self)
+
 
 class Publisher(object):
     "A multi-channel multicaster."
+    listeners = None
     
     def __init__(self):
-        self.listeners = collections.defaultdict(Multicaster)
+        self.listeners = defaultdict(Multicaster)
     
     def listen(self, event, listener):
         """ Registers a listener to be notified of an event. Listener must be 

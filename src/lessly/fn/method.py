@@ -15,4 +15,11 @@ def methodize(_callable, instance, cls=None, wrap=None):
     wrapper._callable = _callable
     
     m = wraps(wrap)(wrapper) if wrap else wrapper
-    return MethodType(m, instance, cls or instance.__class__)
+    return MethodType(m, instance, cls or type(instance))
+
+def find_in_mro(name, o, *exclude):
+    mro = o.mro() if isinstance(o, type) else type(o).mro()
+    for cls in mro:
+        if name in cls.__dict__ and cls not in exclude and cls.__dict__[name] not in exclude:
+            return cls.__dict__[name]
+    return None
