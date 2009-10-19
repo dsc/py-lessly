@@ -5,7 +5,7 @@ setup(
     name = "lessly",
     version = "0.0.1",
     package_dir = {'': 'src'},
-    packages = ["lessly", "lessly.fn", "lessly.collect", "lessly.meta"],
+    packages = ["lessly", "lessly.actor", "lessly.fn", "lessly.collect", "lessly.meta"],
     
     author = "David Schoonover",
     author_email = "dsc@less.ly",

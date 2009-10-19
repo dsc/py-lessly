@@ -1,4 +1,5 @@
 from collect import items
+from collections import defaultdict
 
 class Bunch(dict):
     """ A dictionary that provides attribute-style access.
@@ -46,6 +47,14 @@ class Bunch(dict):
                 raise AttributeError(k)
     
 
+class DefaultBunch(Bunch, defaultdict):
+    """ A defaultdict that provides attribute-style access.
+    """
+
+def InfiBunch():
+    "Returns a DefaultBunch that defaults to DefaultBunch all the way down."
+    return DefaultBunch( InfiBunch )
+
 
 class BunchBunch(Bunch):
     """ A dictionary that provides attribute-style access and
@@ -85,4 +94,85 @@ class BunchBunch(Bunch):
     
     def copy(self):
         return BunchBunch( dict.copy(self) )
+    
+    def todict(self):
+        c = dict.copy(self)
+        for k, v in c.iteritems():
+            if callable(getattr(v, 'todict', None)):
+                c[k] = v.todict()
+            elif isinstance(v, dict):
+                c[k] = v.copy()
+        return c
+
+
+class DefaultBunchBunch(BunchBunch, defaultdict):
+    """ A defaultdict that provides attribute-style access and
+        recursively setting dot-separated keys.
+    """
+    
+    def __init__(self, factory):
+        defaultdict.__init__(self, factory)
+    
+
+def InfiBunchBunch():
+    """ Returns a DefaultBunchBunch that defaults to 
+        DefaultBunchBunch all the way down.
+    """
+    return DefaultBunchBunch( InfiBunchBunch )
+
+
+
+BUNCHER_ATTRS = ('__getattribute__', '__setattr__', '__dict__', '_proxy', '__repr__', '__delattr__', 'obj', '__class__', '__new__', '__del__', '__init__')
+class Buncher(dict):
+    """ A dictionary-proxy that provides attribute-style access to another dict object.
+    """
+    
+    def __init__(self, obj):
+        dict.__init__(self)
+        self.obj = obj
+    
+    def __repr__(self):
+        keys = self.keys()
+        keys.sort()
+        args = ', '.join(['%s=%r' % (key, self[key]) for key in keys])
+        return '%s(%s)' % (self.__class__.__name__, args)
+    
+    def __getattribute__(self, k):
+        if k in BUNCHER_ATTRS:
+            return object.__getattribute__(self, k)
+        
+        o = self.obj
+        try:
+            return getattr(o, k)
+        except AttributeError: pass
+        
+        try:
+            return o[k]
+        except KeyError:
+            raise AttributeError(k)
+    
+    def __setattr__(self, k, v):
+        if k == "obj":
+            object.__setattr__(self, k, v)
+        else:
+            self.obj[k] = v
+    
+    def __delattr__(self, k):
+        if k == "obj":
+            object.__delattr__(self, k)
+        else:
+            del self.obj[k]
+    
+    def _proxy(method):
+        def proxied(self, *args, **kw):
+            return getattr(self.obj, method)(*args, **kw)
+        proxied.__name__ = method
+        return proxied
+    
+    for method in ('__hash__', 
+            '__contains__', '__getitem__', '__setitem__', '__delitem__', 
+            '__len__', '__iter__', 
+            '__cmp__', '__eq__', '__ne__', '__ge__', '__gt__', '__le__', '__lt__'):
+        locals()[method] = _proxy(method)
+    
 

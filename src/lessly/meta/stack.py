@@ -1,6 +1,11 @@
+import logging
+log = logging.getLogger('rpg')
+
 import inspect, weakref
 from contextlib import contextmanager
+
 from proxy import AttributeProxy
+from lessly.meta.managed import InnerClass
 
 class StackFrame(AttributeProxy):
     """ Context manager for a frame on the stack. Provides convenience for 
@@ -61,6 +66,14 @@ def find_calling_instance(Type):
             for v in frame.f_locals.values():
                 if isinstance(v, Type):
                     return v
+                # elif issubclass(type(v), InnerClass):
+                #     log.debug('InnerClass detected while looking for %s: <%s at 0x%x>...' % (Type, type(v).__name__, id(v)))
+                #     for attr in dir(v):
+                #         inner = getattr(v, attr, None)
+                #         if isinstance(inner, Type):
+                #             log.debug('--> success! %s' % inner)
+                #             return inner
+                
             frame = frame.f_back
     finally:
         del frame
