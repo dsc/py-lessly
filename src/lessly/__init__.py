@@ -7,3 +7,5 @@ from collect.bunch import Bunch, BunchBunch
 import fn
 from fn import curry, compose, starcompose
 from dates import timestamp
+import csvtools
+csv = csvtools

@@ -56,9 +56,15 @@ def next_filename(name, path=os.getcwd()):
         i += 1
     return name % i
 
+YAML_OPTIONS = {
+    'default_flow_style':False, 
+    'indent':4, 
+    'explicit_start':True
+}
+
 import yaml
 def write_yaml(*records, **kw):
-    opt = merge( dict(default_flow_style=False, indent=4, explicit_start=True), kw )
+    opt = merge( {}, YAML_OPTIONS, kw )
     return yaml.dump_all(records, **opt)
 
 def toyaml(*records):

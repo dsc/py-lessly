@@ -1,5 +1,14 @@
+""" Supplies DelegatingJSONEncoder, a JSON encoder which delegates to the supplied 
+    object if it provides matching methods for getting a serializable 
+    representation or a full encoding.
+"""
+
+__all__ = ('DelegatingJSONEncoder', '_default_encoder', 'encode', 'decode')
+
 from json import JSONEncoder
 from datetime import date, time, datetime
+
+
 
 class DelegatingJSONEncoder(JSONEncoder):
     """ A JSON encoder which delegates to the supplied object if it provides
@@ -27,4 +36,7 @@ class DelegatingJSONEncoder(JSONEncoder):
         else:
             return super(DelegatingJSONEncoder, self).encode(o)
     
+
+_default_encoder = DelegatingJSONEncoder()
+encode = _default_encoder.encode
 
