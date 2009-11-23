@@ -1,7 +1,9 @@
 """ Very miscellaneous but useful functions.
 """
-import os, os.path, sys
+import os, os.path, sys, subprocess, urlparse, yaml
 from lessly.collect import merge
+# from lessly.collect import walk
+
 
 __all__ = (
     'bin_size', 'pack_fmt', 
@@ -39,7 +41,6 @@ def displaymatch(match):
     return '<Match: %r, groups=%r>' % (match.group(), match.groups())
 
 
-import urlparse
 def decodekv(s, lists=False, keep_blank_values=True, strict_parsing=False):
     "As urlparse.parse_qs, but preserves empty keys by default and de-lists the dict."
     opt = dict(keep_blank_values=keep_blank_values, strict_parsing=strict_parsing)
@@ -56,23 +57,30 @@ def next_filename(name, path=os.getcwd()):
         i += 1
     return name % i
 
+
 YAML_OPTIONS = {
     'default_flow_style':False, 
     'indent':4, 
-    'explicit_start':True
+    'explicit_start':True,
 }
 
-import yaml
 def write_yaml(*records, **kw):
     opt = merge( {}, YAML_OPTIONS, kw )
     return yaml.dump_all(records, **opt)
 
 def toyaml(*records):
+    # def keystringer(kv):
+    #     if isinstance(kv, tuple):
+    #         k,v = kv
+    #         return (str(k), v)
+    #     else:
+    #         return kv
+    # 
+    # rs = [ (walk(keystringer, r) if isinstance(r, dict) else r) for r in records ]
     return write_yaml(*records)
 
 
 # Ported from 2.7
-import subprocess
 def check_output(*popenargs, **kwargs):
     """Run command with arguments and return its output as a byte string.
 

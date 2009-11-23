@@ -1,15 +1,16 @@
 from collect import items
 from collections import defaultdict
 
+def bunchify(d, BunchCls=None):
+    "Recursively transforms a dictionary into some flavor of Bunch."
+    if not BunchCls:
+        BunchCls = Bunch
+    return BunchCls( (k, bunchify(v, BunchCls) if isinstance(v, dict) else v) for k,v in d.iteritems() )
+
+
 class Bunch(dict):
     """ A dictionary that provides attribute-style access.
     """
-    
-    def __repr__(self):
-        keys = self.keys()
-        keys.sort()
-        args = ', '.join(['%s=%r' % (key, self[key]) for key in keys])
-        return '%s(%s)' % (self.__class__.__name__, args)
     
     def __contains__(self, k):
         try:
@@ -46,6 +47,25 @@ class Bunch(dict):
             except KeyError:
                 raise AttributeError(k)
     
+    def todict(self):
+        c = dict.copy(self)
+        for k, v in c.iteritems():
+            if callable(getattr(v, 'todict', None)):
+                c[k] = v.todict()
+            elif isinstance(v, dict):
+                c[k] = v.copy()
+        return c
+    
+    def __repr__(self):
+        keys = self.keys()
+        keys.sort()
+        args = ', '.join(['%s=%r' % (key, self[key]) for key in keys])
+        return '%s(%s)' % (self.__class__.__name__, args)
+    
+    @staticmethod
+    def fromDict(d):
+        return bunchify(d, Bunch)
+
 
 class DefaultBunch(Bunch, defaultdict):
     """ A defaultdict that provides attribute-style access.
@@ -77,6 +97,15 @@ class BunchBunch(Bunch):
         except ValueError:
             self[key] = BunchBunch(value) if isinstance(value, dict) else value
     
+    def getdotted(self, key, default=None):
+        try:
+            k, rest = key.split('.',1)
+            v = self.get(k)
+            if isinstance(v, BunchBunch):
+                return v.getdotted(rest, default)
+        except ValueError:
+            return self.get(key, default)
+    
     def update(self, __d, **kv):
         "Accepts any number of dictionaries, and interprets dotted keys recursively."
         for k,v in items(__d,kv):
@@ -95,15 +124,10 @@ class BunchBunch(Bunch):
     def copy(self):
         return BunchBunch( dict.copy(self) )
     
-    def todict(self):
-        c = dict.copy(self)
-        for k, v in c.iteritems():
-            if callable(getattr(v, 'todict', None)):
-                c[k] = v.todict()
-            elif isinstance(v, dict):
-                c[k] = v.copy()
-        return c
-
+    @staticmethod
+    def fromDict(d):
+        return bunchify(d, BunchBunch)
+    
 
 class DefaultBunchBunch(BunchBunch, defaultdict):
     """ A defaultdict that provides attribute-style access and

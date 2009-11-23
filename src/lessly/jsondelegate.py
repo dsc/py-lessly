@@ -19,6 +19,7 @@ class DelegatingJSONEncoder(JSONEncoder):
     def default(self, o):
         if hasattr(o, '__json_default__'):
             return o.__json_default__()
+            
         elif isinstance(o, (datetime, date, time)):
             return o.strftime("%Y-%m-%d %H:%M:%S")
         
