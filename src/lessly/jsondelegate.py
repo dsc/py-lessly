@@ -21,7 +21,7 @@ class DelegatingJSONEncoder(JSONEncoder):
             return o.__json_default__()
             
         elif isinstance(o, (datetime, date, time)):
-            return o.strftime("%Y-%m-%d %H:%M:%S")
+            return o.strftime('%b %d %Y %H:%M:%S')
         
         try:
             iterable = iter(o)
