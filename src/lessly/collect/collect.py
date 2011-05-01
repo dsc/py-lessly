@@ -1,6 +1,6 @@
 """ Operations on collections.
 """
-__all__ = ('items', 'cons', 'merge', 'isany', 'isall', 'weave', 'walk')
+__all__ = ('items', 'cons', 'merge', 'isany', 'isall', 'weave', 'walkmap')
 
 from itertools import chain
 from collections import Iterable, Mapping, Set, Sequence
@@ -45,6 +45,23 @@ def isall( f, xs ):
             return False
     return True
 
+def partition(it, sep):
+    """ Partitions an iterable at the first occurrence of sep, and return a 3-tuple
+        containing the list of items before the separator, the separator itself,
+        and the unexhausted iterator. If the separator is not found, return a 3-tuple of
+        (the exhausted iterable as a list, None, []).
+    """
+    before = []
+    it = iter(it)
+    for val in it:
+        if val == sep:
+            break
+        else:
+            before.append(val)
+    else:
+        return (before, None, [])
+    return (before, sep, it)
+
 def weave( *iterables ):
     """ Breadth-first iteration across the iterable's elements. With iterables
         of mixed-length, exhausted collections are skipped.
@@ -60,7 +77,7 @@ def weave( *iterables ):
             except StopIteration:
                 iterables.remove(it)
 
-def walk(fn, it, new=None, containers=(list, tuple, Mapping, Set)):
+def walkmap(fn, it, new=None, containers=(list, tuple, Mapping, Set)):
     """ Recursively maps all elements in a potentially hierarchical iterable
         `it`, returning an iterable of the same shape. Mappings emit (key, value) 
         pairs as their elements (acquired using lessly.collect.items()).
@@ -76,7 +93,45 @@ def walk(fn, it, new=None, containers=(list, tuple, Mapping, Set)):
             return type(c)(data)
         
     if isinstance(it, Mapping):
-        return new(it, ( fn((k, walk(fn,v,new,containers))) if isinstance(v, containers) else fn((k,v)) for k,v in iteritems(it)))
+        return new(it, ( fn((k, walkmap(fn,v,new,containers))) if isinstance(v, containers) else fn((k,v)) for k,v in iteritems(it) ))
     else:
-        return new(it, (walk(fn, el, new, containers) if isinstance(el, containers) else fn(el) for el in iter(it)))
+        return new(it, ( walkmap(fn, el, new, containers) if isinstance(el, containers) else fn(el) for el in iter(it) ))
+
+
+
+def walkDepthFirst(root):
+    """ Walks a heirarchy of iterables depth-first, emitting the elements.
+    """
+    parent = iter(root)
+    parents = [[]]
+    child = None
+    while parents:
+        try:
+            child = parent.next()
+        except StopIteration:
+            if parents:
+                parent = iter(parents.pop())
+                continue
+            else:
+                break
+        yield child
+        if isinstance(child, Iterable) and not isinstance(child, basestring):
+            parents.append(parent)
+            parent = iter(child)
+
+
+def walkBreadthFirst(root):
+    parent = iter(root) #<-- if this were iter([]), and
+    parents = [[]]      #<-- this were [root], we'd see starting element in results
+    child = None
+    while parts:
+        try:
+            child = parent.next()
+        except StopIteration:
+            parent = iter(parents.pop(0))
+            continue
+        if isinstance(child, Iterable) and not isinstance(child, basestring):
+            parents.append(child)
+        yield child
+
 

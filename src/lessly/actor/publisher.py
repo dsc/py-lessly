@@ -5,9 +5,9 @@ from functools import wraps
 from lessly.fn import curry
 
 @curry
-def noevent(fn, event, *args, **kw):
+def noevent(fn, *args, **kw):
     @wraps(fn)
-    def noevent_fn(*args, **kw):
+    def noevent_fn(event, *__args, **__kw):
         return fn(*args, **kw)
     return noevent_fn
 

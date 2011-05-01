@@ -34,8 +34,11 @@ class DelegatingJSONEncoder(JSONEncoder):
     def encode(self, o):
         if hasattr(o, '__json__'):
             return o.__json__()
-        else:
-            return super(DelegatingJSONEncoder, self).encode(o)
+        
+        if callable(getattr(o, '__json_default__', None)):
+            o = o.__json_default__()
+        
+        return super(DelegatingJSONEncoder, self).encode(o)
     
 
 _default_encoder = DelegatingJSONEncoder()

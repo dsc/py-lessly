@@ -4,19 +4,22 @@ from setuptools import setup, find_packages
 setup(
     name = "lessly",
     version = "0.0.1",
-    package_dir = {'': 'src'},
-    packages = ["lessly", "lessly.actor", "lessly.fn", "lessly.collect", "lessly.meta"],
+    description = "A collection of tools I find useful.",
+    long_description = """ A collection of tools I find useful. """,
+    url = "http://tire.less.ly/hacking/lib",
     
     author = "David Schoonover",
     author_email = "dsc@less.ly",
-    description = "A collection of useful tools.",
-    long_description = """A collection of useful tools.""",
-    url = "http://tire.less.ly/hacking/lib",
     
-    zip_safe = False,
-    
-    classifiers = [
-        'awesome'
+    packages=find_packages('.', exclude=['ez_setup']),
+    # entry_points={
+    #     'console_scripts': ['lessly = lessly:main']
+    # },
+    install_requires=[
+        "bunch>=1.0",
     ],
-)
+    keywords = [],
+    classifiers = [],
+    zip_safe = True,
 
+)

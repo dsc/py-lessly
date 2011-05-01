@@ -1,23 +1,53 @@
 """ Very miscellaneous but useful functions.
 """
-import os, os.path, sys, subprocess, urlparse, yaml
+import os, os.path, sys, subprocess, urlparse
+from itertools import izip, izip_longest
 from lessly.collect import merge
-# from lessly.collect import walk
+from lessly.collect import walkmap
 
 
 __all__ = (
-    'bin_size', 'pack_fmt', 
+    'trim',
+    'bin_size', 'bin_repr', 'bin_chunks',
+    'pack_fmt',
     'displaymatch', 
     'decodekv', 
     'next_filename', 
     'toyaml', 'write_yaml',
+    'keystringer',
     'check_output',
 )
+
+def trim(s='', *chars):
+    for chs in chars:
+        if chars and s.endswith(chars):
+            s = s[:len(chars)]
+    return s
 
 
 def bin_size(i):
     "Number of bits needed to represent the absolute value of i."
     return len(bin(abs(i))) - 2
+
+def bin_chunks(b, size=8):
+    bs = bin(b)[2:]
+    while len(bs) % size != 0:
+        bs = '0'+bs
+    for chunk in izip(*([iter(bs)] * size)):
+        yield ''.join(chunk)
+
+def bin_repr(b, size=4, per_line=4):
+    return '\n'.join(' '.join(tokens) for tokens in izip_longest( fillvalue='', *([iter(bin_chunks(b, size))] * per_line) ))
+
+    # 
+    # out = ''
+    # line = []
+    # for i, chunk in enumerate(bin_chunks(b, size=size)):
+    #     line.append(chunk)
+    #     if (i+1) % per_line == 0:
+    #         out += ' '.join(line) + '\n'
+    #         line = []
+    # return out
 
 FORMAT_SIZES = [ ('b', 4), ('h', 8), ('i', 16), ('l', 16), ('q', 32) ]
 def pack_fmt(i, signed=True):
@@ -58,26 +88,41 @@ def next_filename(name, path=os.getcwd()):
     return name % i
 
 
-YAML_OPTIONS = {
-    'default_flow_style':False, 
-    'indent':4, 
-    'explicit_start':True,
-}
+import yaml
 
-def write_yaml(*records, **kw):
-    opt = merge( {}, YAML_OPTIONS, kw )
-    return yaml.dump_all(records, **opt)
+def toyaml(*records, **kw):
+    if kw: records += (kw,)
+    return yaml.dump_all(records, default_flow_style=False, indent=4, explicit_start=True)
 
-def toyaml(*records):
-    # def keystringer(kv):
-    #     if isinstance(kv, tuple):
-    #         k,v = kv
-    #         return (str(k), v)
-    #     else:
-    #         return kv
-    # 
-    # rs = [ (walk(keystringer, r) if isinstance(r, dict) else r) for r in records ]
-    return write_yaml(*records)
+def write_yaml(*records, **options):
+    options = merge({ 'default_flow_style':False, 'indent':4, 'explicit_start':True, }, options)
+    return yaml.dump_all(records, **options)
+
+def cxrange(start, end=None, step=1):
+    if end is None:
+        end = start
+        start = 'a'
+    for n in xrange(ord(start), ord(end), step):
+        yield chr(n)
+
+def crange(start, end=None, step=1):
+    return list(cxrange(start, end, step))
+
+def _keystringer(kv):
+    if isinstance(kv, tuple):
+        k,v = kv
+        return (str(k), str(v) if isinstance(v, unicode) else v)
+    else:
+        return kv
+
+def keystringer(*records):
+    r = [ (walkmap(_keystringer, r) if isinstance(r, dict) else r) for r in records ]
+    if len(records) == len(r) == 1:
+        return r[0]
+    else:
+        return r
+
+
 
 
 # Ported from 2.7
