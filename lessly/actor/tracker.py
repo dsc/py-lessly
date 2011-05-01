@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 __all__ = ('Tracker')
+
 from weakref import WeakKeyDictionary
 from lessly.actor.actor import Actor
 from lessly.actor.publisher import Publisher

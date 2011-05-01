@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+# backported from 2.7
+
 from operator import itemgetter
 from heapq import nlargest
 from itertools import repeat, ifilter

@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 __all__ = ('Announcer', 'AnnouncingMethod', 'AnnouncingClassMethod')
+
 from collections import defaultdict
 from types import MethodType, FunctionType
 from functools import wraps

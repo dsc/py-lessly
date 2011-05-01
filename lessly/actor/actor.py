@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 from abc import abstractmethod, ABCMeta
 from collections import Sequence
 

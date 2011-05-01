@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
 __all__ = ('Multicaster', 'Publisher', 'noevent')
+
 import itertools
 from collections import defaultdict
 from functools import wraps

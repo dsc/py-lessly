@@ -18,10 +18,11 @@ __all__ = (
     'check_output',
 )
 
-def trim(s='', *chars):
-    for chs in chars:
-        if chars and s.endswith(chars):
-            s = s[:len(chars)]
+def trim(s='', *suffixes):
+    "Removes suffix from s. Each given suffix is removed in order; removal is not recursive."
+    for suffix in suffixes:
+        if suffix and s.endswith(suffix):
+            s = s[:len(suffix)]
     return s
 
 
@@ -76,6 +77,7 @@ def decodekv(s, lists=False, keep_blank_values=True, strict_parsing=False):
     opt = dict(keep_blank_values=keep_blank_values, strict_parsing=strict_parsing)
     return urlparse.parse_qs(s, **opt) if lists else dict(urlparse.parse_qsl(s, **opt))
 
+
 def next_filename(name, path=os.getcwd()):
     """ Takes a filename with one printf-style slot to be filled with an integer 
         and returns the filename with the slot filled incrementally to the next 
@@ -98,6 +100,8 @@ def write_yaml(*records, **options):
     options = merge({ 'default_flow_style':False, 'indent':4, 'explicit_start':True, }, options)
     return yaml.dump_all(records, **options)
 
+
+
 def cxrange(start, end=None, step=1):
     if end is None:
         end = start
@@ -107,6 +111,9 @@ def cxrange(start, end=None, step=1):
 
 def crange(start, end=None, step=1):
     return list(cxrange(start, end, step))
+
+
+# unicode keys in dicts look terrible when prettyprinted
 
 def _keystringer(kv):
     if isinstance(kv, tuple):
