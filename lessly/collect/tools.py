@@ -1,9 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """ Operations on collections.
 """
-__all__ = ('items', 'cons', 'merge', 'isany', 'isall', 'weave', 'walkmap')
 
-from itertools import chain
+__all__ = (
+    'get_dotted', 'set_dotted', 'del_dotted', 'has_dotted',
+    'items', 'cons', 'merge',
+    'xpluck', 'xpluckattr', 'pluck', 'pluckattr', 'xinvoke', 'invoke',
+    'find', 'uniqued', 'isany', 'isall',
+    'weave', 'walk', 'walkmap', 'walkBreadthFirst', 'walkDepthFirst',
+)
+
+from operator import eq
+from itertools import chain, repeat
 from collections import Iterable, Mapping, Set, Sequence
+
+from .dict import get_dotted, set_dotted, del_dotted, has_dotted
 
 
 def cons(hd, tl):
@@ -33,17 +45,77 @@ def items( *cs, **kw ):
 def merge( *cs, **kw ):
     return type(cs[0] if cs and cs[0] is not None else kw)( items(*cs,**kw) )
 
+
+
+def xpluck(it, key, default=None):
+    "Gets given key from each dict in iterable, yielding results."
+    for d in it:
+        yield d.get(key, default)
+
+def pluck(it, key, default=None):
+    "Gets given key from each dict in iterable, returning list of results."
+    return list(xpluck(it, key, default))
+
+def xpluckattr(it, attr, default=None):
+    "Gets given attribute from each object in iterable, yielding results."
+    for o in it:
+        yield getattr(o, name, default)
+
+def pluckattr(it, key, default=None):
+    "Gets given attribute from each object in iterable, returning list of results."
+    return list(xpluckattr(it, key, default))
+
+
+def xinvoke(it, attr, *args, **kwargs):
+    "Invokes method of each object in iterable, yielding the results."
+    for o in it:
+        m = getattr(o, attr)
+        yield m(*args, **kwargs)
+
+def invoke(it, attr, *args, **kwargs):
+    "Invokes method of each object in iterable, returning list of results."
+    return list(xinvoke(it, attr, *args, **kwargs))
+
+
+def find(it, test=bool, default=None):
+    "Returns the first item for which the test returns truth-y."
+    for v in it:
+        if test(v): return v
+    return default
+
+def uniqued(it):
+    "Create a copy of the iterable with only unique values."
+    if isinstance(it, (set, frozenset)):
+        return type(it)(it)
+    if isinstance(it, dict):
+        values = set()
+        out = {}
+        for k, v in it.items():
+            if v in values: continue
+            values.add(v)
+            out[k] = v
+    else:
+        out = []
+        for v in it:
+            if v not in out: out.append(v)
+        # convert to tuple or whatever if necessary
+        if isinstance(it, basestring):
+            out = ''.join(out)
+        elif not isinstance(it, list):
+            out = type(it)(out)
+    return out
+
+
 def isany( f, xs ):
     for x in xs:
-        if f(x):
-            return True
+        if f(x): return True
     return False
 
 def isall( f, xs ):
     for x in xs:
-        if not f(x):
-            return False
+        if not f(x): return False
     return True
+
 
 def partition(it, sep):
     """ Partitions an iterable at the first occurrence of sep, and return a 3-tuple
@@ -62,6 +134,7 @@ def partition(it, sep):
         return (before, None, [])
     return (before, sep, it)
 
+
 def weave( *iterables ):
     """ Breadth-first iteration across the iterable's elements. With iterables
         of mixed-length, exhausted collections are skipped.
@@ -76,6 +149,9 @@ def weave( *iterables ):
                 yield it.next()
             except StopIteration:
                 iterables.remove(it)
+
+
+
 
 def walkmap(fn, it, new=None, containers=(list, tuple, Mapping, Set)):
     """ Recursively maps all elements in a potentially hierarchical iterable
@@ -98,6 +174,8 @@ def walkmap(fn, it, new=None, containers=(list, tuple, Mapping, Set)):
         return new(it, ( walkmap(fn, el, new, containers) if isinstance(el, containers) else fn(el) for el in iter(it) ))
 
 
+def walk(root, depthFirst=True):
+    return walkDepthFirst(root) if depthFirst else walkBreadthFirst(root)
 
 def walkDepthFirst(root):
     """ Walks a heirarchy of iterables depth-first, emitting the elements.
@@ -124,7 +202,7 @@ def walkBreadthFirst(root):
     parent = iter(root) #<-- if this were iter([]), and
     parents = [[]]      #<-- this were [root], we'd see starting element in results
     child = None
-    while parts:
+    while parents:
         try:
             child = parent.next()
         except StopIteration:
@@ -133,5 +211,10 @@ def walkBreadthFirst(root):
         if isinstance(child, Iterable) and not isinstance(child, basestring):
             parents.append(child)
         yield child
+
+
+def ncycles(it, n):
+    "Iterates the sequence elements n times"
+    return chain.from_iterable(repeat(it, n))
 
 

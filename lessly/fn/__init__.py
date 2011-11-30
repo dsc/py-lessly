@@ -2,5 +2,6 @@ from itertools import repeat
 from compose import *
 
 
-def k(val):
+def K(val):
     return repeat(val).next
+

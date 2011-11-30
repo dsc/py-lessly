@@ -1,8 +1,39 @@
 import time
 import datetime
+import calendar
 from collections import Mapping
 
-__all__ = ('mkdatetime', 'mktimestamp', 'timestamp', 'TimeInterval', 'Duration', 'seconds')
+__all__ = (
+    'dstDelta',
+    'timetuples', 'mkdatetime', 'mktimestamp', 'timestamp',
+    'TimeInterval', 'Duration', 'seconds',
+)
+
+
+def dstDelta():
+    "Returns the timedelta representing the DST offset from the localtime."
+    return datetime.timedelta(seconds=0 if not time.daylight else (time.timezone - time.altzone))
+
+
+STRUCT_TIME_FIELDS = ('year', 'month', 'mday', 'hour', 'min', 'sec', 'wday', 'yday', 'isdst')
+
+def timetuples(*tts, **kw):
+    """ timetuples(*tts, year=None, month=None, mday=None, hour=None, min=None, sec=None, wday=None, yday=None, isdst=None)
+        
+        Merge the given tuples (including time.struct_time), first to last skipping None-valued indices, and
+        finally overriding with keyword args whenever not None. Missing values are set to 0 (including 
+        tm_wday, tm_yday, and tm_isdst irrespective of the specified date).
+    """
+    out = [0] * 9
+    for tt in tts:
+        for idx, v in enumerate(tt):
+            if v is not None:
+                out[idx] = v
+    for idx, name in enumerate(STRUCT_TIME_FIELDS):
+        v = kw.get(name, None)
+        if v is not None:
+            out[idx] = v
+    return time.struct_time(out)
 
 
 
@@ -10,38 +41,44 @@ def mkdatetime(t):
     "Returns a datetime as parsed by timestamp()"
     return datetime.datetime.fromtimestamp(timestamp(t))
 
-def mktimestamp(year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
-    "Returns seconds since the epoch for a datetime."
-    return time.mktime(datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo).timetuple())
+def mktimestamp(year, month, day, hour=0, minute=0, second=0, microsecond=0, is_dst=-1, tzinfo=None):
+    "Returns seconds since the epoch for given datetime components."
+    if tzinfo:
+        tt = datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo).timetuple()
+    else:
+        tt = time.struct_time(year, month, day, hour, minute, second, microsecond, is_dst)
+    return time.mktime(tt)
 
 def timestamp(t, *args, **kw):
     """ Converts a value to a unix timestamp represented by a float, accepting:
         (a) Arguments:
             
-            year, month, day, [hour, [minute, [second, [microsecond, [tzinfo]]]]]
+            year, month, day, [hour, [minute, [second, [microsecond, [is_dst=-1, [tzinfo]]]]]]
             
-            Missing values replaced with 0s.
+            Missing values replaced with 0, excepting is_dst and tzinfo.
         (b) A single value to convert:
+            - datetime, time.struct_time, int, long, float, double: cast to float without interpolation
             - string: converted using time.strptime
-            - tuple, list, dict: converted using lessly.dates.timestamp()
             - datetime.time: as timestamp with year, month, and day from time.localtime(0)
             - datetime.date: as datetime.datetime(year, month, day)
-            - datetime, int, long, float, double: no interpolation
+            - tuple, list, dict: expanded and then converted again
     """
     if len(args) > 1 or (args and 'month' in kw) or ('month' in kw and 'day' in kw):
         return mktimestamp(t, *args, **kw)
     
     if isinstance(t, basestring):
         ts = time.strptime(t)
+    elif isinstance(t, time.struct_time):
+        ts = time.mktime(t) # calendar.timegm(t) if t[8] is 0 else time.mktime(t)
     elif isinstance(t, Mapping):
         ts = timestamp(**t)
     elif isinstance(t, (list, tuple)):
         ts = timestamp(*t)
-    elif isinstance(t, datetime.time):
-        lt = time.localtime(0)
-        ts = timestamp(lt.tm_year, lt.tm_mon, lt.tm_mday, t.hour, t.minute, t.second, t.microsecond, t.tzinfo)
     elif isinstance(t, (datetime.datetime, datetime.date)):
-        ts = time.mktime(t.timetuple())
+        ts = timestamp(t.timetuple())
+    elif isinstance(t, datetime.time):
+        lt = time.localtime(0) # start at epoch
+        ts = timestamp(lt.tm_year, lt.tm_mon, lt.tm_mday, t.hour, t.minute, t.second, t.microsecond, t.tzinfo)
     else:
         ts = t
     return float(ts)

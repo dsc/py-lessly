@@ -1,6 +1,11 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-USE_DEMJSON = True
+# look into universaljson on pypi
+# dump, load for both
+
+
+USE_DEMJSON = False
 
 if USE_DEMJSON:
     import demjson
@@ -16,7 +21,10 @@ if USE_DEMJSON:
     
     JSONDecodeError = demjson.JSONDecodeError
 else:
-    import json
+    try:
+        import cjson as json
+    except ImportError:
+        import json
     
     def fromjson(txt, strict=False):
         return json.loads(txt)
