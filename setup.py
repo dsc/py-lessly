@@ -2,24 +2,19 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = "lessly",
-    version = "0.0.1",
-    description = "A collection of tools I find useful.",
-    long_description = """ A collection of tools I find useful. """,
-    url = "http://tire.less.ly/hacking/lib",
+    name             = 'lessly',
+    version          = '0.0.1',
     
-    author = "David Schoonover",
-    author_email = "dsc@less.ly",
+    author           = 'David Alan Schoonover',
+    author_email     = 'dsc@less.ly',
     
-    packages=find_packages('.', exclude=['ez_setup']),
-    # entry_points={
-    #     'console_scripts': ['lessly = lessly:main']
-    # },
-    install_requires=[
-        "bunch>=1.0",
+    packages         = find_packages('.', exclude=['ez_setup']),
+    install_requires = [
+        'bunch    >= 1.0',
+        'PyYAML   >= 3.10',
+        'markdown >= 2.1.0',
+        'lxml     >= 2.3',
+        'pyquery  >= 1.1',
     ],
-    keywords = [],
-    classifiers = [],
-    zip_safe = True,
-
+    zip_safe         = True,
 )
