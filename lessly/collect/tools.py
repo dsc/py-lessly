@@ -7,8 +7,8 @@ __all__ = (
     'get_dotted', 'set_dotted', 'del_dotted', 'has_dotted',
     'items', 'cons', 'merge',
     'xpluck', 'xpluckattr', 'pluck', 'pluckattr', 'xinvoke', 'invoke',
-    'find', 'uniqued', 'isany', 'isall',
-    'weave', 'walk', 'walkmap', 'walkBreadthFirst', 'walkDepthFirst',
+    'find', 'uniqued', 'isany', 'isall', 'is_any', 'is_all',
+    'batch', 'weave', 'walk', 'walkmap', 'walkBreadthFirst', 'walkDepthFirst',
 )
 
 from operator import eq
@@ -106,15 +106,53 @@ def uniqued(it):
     return out
 
 
-def isany( f, xs ):
-    for x in xs:
-        if f(x): return True
+def isany(it, test=bool):
+    "True if `test(x)` for any `x` in the iterable."
+    for x in it:
+        if test(x): return True
     return False
 
-def isall( f, xs ):
-    for x in xs:
-        if not f(x): return False
+def isall(it, test=bool):
+    "True if `test(x)` for any `x` in the iterable."
+    for x in it:
+        if not test(x): return False
     return True
+
+is_any = isany
+is_all = isall
+
+
+
+def batch(it, n, fill_with=None):
+    """ A filter that batches items. It works pretty much like `slice`
+        just the other way round. It returns a list of lists with the
+        given number of items. If you provide a second parameter this
+        is used to fill missing items. See this example:
+        
+        .. sourcecode:: html+jinja
+            
+            <table>
+            {%- for row in items|batch(3, '&nbsp;') %}
+              <tr>
+              {%- for column in row %}
+                <td>{{ column }}</td>
+              {%- endfor %}
+              </tr>
+            {%- endfor %}
+            </table>
+    """
+    result = []
+    tmp = []
+    for item in it:
+        if len(tmp) == n:
+            yield tmp
+            tmp = []
+        tmp.append(item)
+    if tmp:
+        if fill_with is not None and len(tmp) < n:
+            tmp += [fill_with] * (n - len(tmp))
+        yield tmp
+
 
 
 def partition(it, sep):
@@ -135,7 +173,8 @@ def partition(it, sep):
     return (before, sep, it)
 
 
-def weave( *iterables ):
+
+def weave(*iterables):
     """ Breadth-first iteration across the iterable's elements. With iterables
         of mixed-length, exhausted collections are skipped.
         

@@ -3,18 +3,23 @@ from setuptools import setup, find_packages
 
 setup(
     name             = 'lessly',
-    version          = '0.0.1',
+    description      = 'Convenience tools: sometimes useful, oft inscrutable, certainly educational.',
+    version          = '0.1.0',
     
     author           = 'David Alan Schoonover',
     author_email     = 'dsc@less.ly',
     
-    packages         = find_packages('.', exclude=['ez_setup']),
+    packages         = find_packages(),
     install_requires = [
-        'bunch    >= 1.0',
-        'PyYAML   >= 3.10',
-        'markdown >= 2.1.0',
-        'lxml     >= 2.3',
-        'pyquery  >= 1.1',
+        'path        >= 2.2',
+        'bunch       >= 1.0',
+        'PyYAML      >= 3.10',
+        'markdown    >= 2.1.0',
+        'lxml        >= 2.3',
+        'pyquery     >= 1.1',
+        'jsonlib2    >= 1.5.2',
+        'anyjson     >= 0.3.1',
     ],
-    zip_safe         = True,
+    zip_safe         = False,
+    license          = 'MIT',
 )

@@ -1,9 +1,3 @@
-# try: # pragma: no cover
-#     __import__('pkg_resources').declare_namespace(__name__)
-# except ImportError: # pragma: no cover
-#     __import__('pkgutil').extend_path(__path__, __name__)
-
-
 import lessly.misc
 from .misc import *
 
@@ -28,5 +22,7 @@ from .data import csvtools as csv
 
 import lessly.cli
 import lessly.cli.options
-from .cli.options import FileType
+import lessly.cli.script
+from .cli.options import PathTypeError, FileType, PathType, DirectoryType
+from .cli.script import Script
 
