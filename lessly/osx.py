@@ -5,9 +5,14 @@ import plistlib
 import site
 site.addsitedir('/System/Library/Frameworks/Python.framework/Versions/2.6/Extras/lib/python')
 
-import objc, PyObjCTools, Foundation, ScriptingBridge
+import appscript, objc, PyObjCTools, Foundation, ScriptingBridge
 from Foundation import *
 from ScriptingBridge import *
+
+
+def getApp(identifier):
+    return SBApplication.applicationWithBundleIdentifier_(identifier)
+
 
 iTunes = SBApplication.applicationWithBundleIdentifier_("com.apple.iTunes")
 library = iTunes.sources()[0].libraryPlaylists()[0]

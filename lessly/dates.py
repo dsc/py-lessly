@@ -7,6 +7,7 @@ __all__ = (
     'dstDelta',
     'timetuples', 'mkdatetime', 'mktimestamp', 'timestamp',
     'TimeInterval', 'Duration', 'seconds',
+    'parse',
 )
 
 
@@ -140,3 +141,19 @@ class Duration(object):
 
 # Backwards compat
 TimeInterval = Duration
+
+try:
+    import parsedatetime
+    
+    def parse(*args, **kwargs):
+        cal = parsedatetime.Calendar()
+        dt, flag = cal.parse(*args, **kwargs)
+        return dt
+    
+    parse.__doc__ = parsedatetime.Calendar.parse.__doc__
+    
+except ImportError:
+    def parse(*args, **kwargs):
+        import parsedatetime
+    
+

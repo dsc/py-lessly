@@ -1,6 +1,27 @@
-import pyquery, lxml
+import re, lxml, pyquery
+
+NS_PAT = re.compile(r'xmlns="[^"]+" ?', re.I)
 
 class DOM(pyquery.PyQuery):
+    
+    def __init__(self, *args, **kwargs):
+        selector = context = None
+        
+        if len(args) == 1:
+            context = args[0]
+            args_head = tuple()
+            args_tail = args[1:]
+        elif len(args) >= 2:
+            selector, context = args[:2]
+            args_head = (selector,)
+            args_tail = args[3:]
+        
+        # we delete the namespace, otherwise selectors don't work
+        if isinstance(context, basestring):
+            context, n = NS_PAT.subn('', context)
+        
+        args = args_head + (context,) + args_tail
+        pyquery.PyQuery.__init__(self, *args, **kwargs)
     
     def iter(self):
         # Iterate by index, or face infinite recursion!
@@ -16,11 +37,11 @@ class DOM(pyquery.PyQuery):
     def eq(self, idx):
         return DOM(self[idx])
     
-    @staticmethod
-    def from_file(f):
-        return DOM(lxml.html.parse(f).getroot())
+    @classmethod
+    def fromFile(Cls, f):
+        return Cls(lxml.html.parse(f).getroot())
     
-    @staticmethod
-    def from_path(path):
-        return DOM.from_file(open(path, 'rU'))
+    @classmethod
+    def fromPath(Cls, path):
+        return Cls.fromFile(txt)
     

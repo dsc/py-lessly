@@ -2,18 +2,17 @@
 """
 import os, os.path, sys, subprocess, urlparse, re
 from itertools import izip, izip_longest
-from lessly.collect import merge
-from lessly.collect import walkmap
+from lessly.collect.tools import merge, walkmap
 
 # backwards compat
 from lessly.strings import trim, title_case
-from lessly.data.yamltools import toyaml, write_yaml
+from lessly.data.yamltools import toyaml, ppyaml, write_yaml
 from lessly.files import next_filename
 
 
 __all__ = (
     'trim', 'title_case', 'next_filename', 
-    'toyaml', 'write_yaml',
+    'toyaml', 'ppyaml', 'write_yaml',
     'bin_size', 'bin_repr', 'bin_chunks', 'pack_fmt',
     'displaymatch', 
     'decodekv', 
@@ -106,7 +105,11 @@ def crange(start, end=None, step=1):
 def _keystringer(kv):
     if isinstance(kv, tuple):
         k,v = kv
-        return (str(k), str(v) if isinstance(v, unicode) else (dict(v) if isinstance(v, dict) else v))
+        try:
+            return (str(k), str(v) if isinstance(v, unicode) else (dict(v) if isinstance(v, dict) else v))
+        except UnicodeEncodeError:
+            print 'key: {k!r}\nvalue: {v!r}'.format(**locals())
+            raise
     else:
         return kv
 
