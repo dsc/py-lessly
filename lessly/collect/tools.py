@@ -7,11 +7,11 @@ __all__ = (
     'get_dotted', 'set_dotted', 'del_dotted', 'has_dotted',
     'items', 'cons', 'merge',
     'xpluck', 'xpluckattr', 'pluck', 'pluckattr', 'xinvoke', 'invoke',
-    'find', 'uniqued', 'isany', 'isall', 'is_any', 'is_all',
+    'find', 'xunique', 'uniqued', 'isany', 'isall', 'is_any', 'is_all',
     'batch', 'weave', 'walk', 'walkmap', 'walkBreadthFirst', 'walkDepthFirst',
 )
 
-from operator import eq
+from operator import eq, itemgetter
 from itertools import chain, repeat
 from collections import Iterable, Mapping, Set, Sequence
 
@@ -50,7 +50,10 @@ def merge( *cs, **kw ):
 def xpluck(it, key, default=None):
     "Gets given key from each dict in iterable, yielding results."
     for d in it:
-        yield d.get(key, default)
+        try:
+            yield d[key]
+        except (IndexError, KeyError) as ex:
+            yield default
 
 def pluck(it, key, default=None):
     "Gets given key from each dict in iterable, returning list of results."
@@ -82,6 +85,25 @@ def find(it, test=bool, default=None):
     for v in it:
         if test(v): return v
     return default
+
+
+# from itertools recipes
+def xunique(iterable, key=None):
+    "List unique elements, preserving order. Remember all elements ever seen."
+    # unique_everseen('AAAABBBCCDAABBB') --> A B C D
+    # unique_everseen('ABBCcAD', str.lower) --> A B C D
+    seen = set()
+    seen_add = seen.add
+    if key is None:
+        for element in ifilterfalse(seen.__contains__, iterable):
+            seen_add(element)
+            yield element
+    else:
+        for element in iterable:
+            k = key(element)
+            if k not in seen:
+                seen_add(k)
+                yield element
 
 def uniqued(it):
     "Create a copy of the iterable with only unique values."

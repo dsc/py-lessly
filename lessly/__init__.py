@@ -5,7 +5,7 @@ import lessly.collect
 from .collect.tools import (
     cons, items, iteritems, merge,
     pluck, pluckattr, xpluck, xpluckattr, invoke, xinvoke,
-    find, uniqued,
+    find, uniqued, xunique,
 )
 from .collect.dict import *
 # from .collect.dict.bunchbunch import *

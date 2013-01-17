@@ -1,6 +1,6 @@
 import re
 
-__all__ = ('trim', 'title_case',)
+__all__ = ('trim', 'title_case','split_camel',)
 
 def trim(s='', *suffixes):
     "Removes suffix from s. Each given suffix is removed in order; removal is not recursive."
@@ -45,4 +45,33 @@ def title_case(s, force_lower=True):
     replacer = lower_title_replacer if force_lower else title_replacer
     return TITLE_PAT.subn(replacer, s)[0]
 
+
+def split_camel(s):
+    """ Splits the string at the camel-case boundaries, returning
+        a list of its parts.
+        
+        >>> split_camel("splitCamelCaseString")
+        ['split', 'camel', 'case', 'string']
+        >>> split_camel("InscrutableGenericsRelatedTypeError")
+        ['inscrutable', 'generics', 'related', 'type', 'error']
+        >>> split_camel("EncodeURLComponent")
+        ['encode', 'url', 'component']
+    """
+    out = []
+    tok = s[0].lower()
+    caps_run = False
+    for c in s[1:]:
+        is_caps = c.isupper()
+        if caps_run and not is_caps:
+            out.append(tok[:-1])
+            tok = tok[-1] + c.lower()
+        elif is_caps and not prev_caps:
+            out.append(tok)
+            tok = c.lower()
+        else:
+            tok += c.lower()
+        caps_run  = is_caps and prev_caps
+        prev_caps = is_caps
+    out.append(tok)
+    return out
 

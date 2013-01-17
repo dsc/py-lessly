@@ -19,6 +19,7 @@ setup(
         'pyquery     >= 1.1',
         'jsonlib2    >= 1.5.2',
         'anyjson     >= 0.3.1',
+        "colorama    >= 0.2.4",
     ],
     zip_safe         = False,
     license          = 'MIT',

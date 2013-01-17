@@ -19,6 +19,7 @@ def add_colors(d):
 class Script(object):
     "Scripting base class."
     verbose = True
+    parser = None
     
     
     def __init__(self, *args, **options):
@@ -67,9 +68,14 @@ class Script(object):
         return values
     
     @classmethod
-    def main(cls, *args, **overrides):
+    def create(cls, *args, **overrides):
         values = cls.parse(*args, **overrides)
-        return cls(**values)() or 0
+        return cls(**values)
+    
+    @classmethod
+    def main(cls, *args, **overrides):
+        return cls.create(*args, **overrides)() or 0
+    
     
 
 
